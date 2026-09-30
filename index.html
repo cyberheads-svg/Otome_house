@@ -233,6 +233,7 @@
     .bar-slot{ width:42px; height:42px; }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/lamejs@1.2.0/lame.min.js"></script>
 </head>
 <body>
 
@@ -1091,6 +1092,7 @@ function togglePlay() {
 // ==================== 録音 ====================
 function toggleRecord() {
   if (recordFormat === 'wav') toggleRecordWav();
+  else if (recordFormat === 'mp3') toggleRecordMp3();
   else toggleRecordWebm();
 }
 
@@ -1166,6 +1168,60 @@ function toggleRecordWav() {
   }
 }
 
+
+function toggleRecordMp3() {
+  const btn = document.getElementById('recordBtn');
+  if (!isRecording) {
+    ensureAudio().then(() => {
+      recordedSamples = [];
+      const bufferSize = 4096;
+      scriptNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+      silentGain = audioCtx.createGain();
+      silentGain.gain.value = 0;
+
+      masterOut.connect(scriptNode);
+      scriptNode.connect(silentGain);
+      silentGain.connect(audioCtx.destination);
+
+      scriptNode.onaudioprocess = (e) => {
+        recordedSamples.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      };
+
+      isRecording = true;
+      btn.textContent = '■ 録音停止';
+      document.getElementById('status').textContent = '8小節をMP3で録音中...';
+    });
+  } else {
+    isRecording = false;
+    btn.textContent = '● 録音して保存';
+
+    if (scriptNode) {
+      scriptNode.onaudioprocess = null;
+      masterOut.disconnect(scriptNode);
+      scriptNode.disconnect();
+      if (silentGain) silentGain.disconnect();
+    }
+
+    if (typeof lamejs === 'undefined') {
+      // MP3エンコーダーの読み込みに失敗した場合はWAVにフォールバック
+      const wavBlob = encodeWAV(recordedSamples, audioCtx.sampleRate);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(wavBlob);
+      a.download = `8bar_otomehouse_${Date.now()}.wav`;
+      a.click();
+      document.getElementById('status').textContent = 'MP3エンコーダーの読み込みに失敗したため、WAVで保存しました（通信環境を確認してください）';
+      return;
+    }
+
+    const mp3Blob = encodeMP3(recordedSamples, audioCtx.sampleRate);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(mp3Blob);
+    a.download = `8bar_otomehouse_${Date.now()}.mp3`;
+    a.click();
+    document.getElementById('status').textContent = 'MP3ファイルを書き出しました';
+  }
+}
+
 function encodeWAV(chunks, sampleRate) {
   let totalLength = 0;
   chunks.forEach(c => { totalLength += c.length; });
@@ -1206,6 +1262,42 @@ function encodeWAV(chunks, sampleRate) {
   return new Blob([view], { type: 'audio/wav' });
 }
 
+
+// ---- Float32のPCMサンプルをInt16に変換（lamejsへの入力用） ----
+function floatsToInt16(floatSamples) {
+  const int16 = new Int16Array(floatSamples.length);
+  for (let i = 0; i < floatSamples.length; i++) {
+    let s = Math.max(-1, Math.min(1, floatSamples[i]));
+    s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    int16[i] = s;
+  }
+  return int16;
+}
+
+// ---- lamejs（純JS製のMP3エンコーダー）でMP3を書き出す ----
+function encodeMP3(chunks, sampleRate) {
+  let totalLength = 0;
+  chunks.forEach(c => { totalLength += c.length; });
+  const merged = new Float32Array(totalLength);
+  let offset = 0;
+  chunks.forEach(c => { merged.set(c, offset); offset += c.length; });
+
+  const int16Samples = floatsToInt16(merged);
+  const mp3encoder = new lamejs.Mp3Encoder(1, sampleRate, 192); // モノラル・192kbps
+  const mp3Data = [];
+  const sampleBlockSize = 1152; // lamejsの仕様上、576の倍数を推奨
+
+  for (let i = 0; i < int16Samples.length; i += sampleBlockSize) {
+    const chunk = int16Samples.subarray(i, i + sampleBlockSize);
+    const buf = mp3encoder.encodeBuffer(chunk);
+    if (buf.length > 0) mp3Data.push(buf);
+  }
+  const endBuf = mp3encoder.flush();
+  if (endBuf.length > 0) mp3Data.push(endBuf);
+
+  return new Blob(mp3Data, { type: 'audio/mp3' });
+}
+
 // ==================== 初期化 ====================
 function init() {
   randomizeChordProgression();
@@ -1215,9 +1307,12 @@ function init() {
   document.getElementById('playBtn').onclick = togglePlay;
   document.getElementById('recordBtn').onclick = toggleRecord;
   document.getElementById('formatToggleBtn').onclick = () => {
-    if (isRecording) return;
-    recordFormat = recordFormat === 'wav' ? 'webm' : 'wav';
-    document.getElementById('formatToggleBtn').textContent = '形式: ' + (recordFormat === 'wav' ? 'WAV' : 'WebM');
+    if (isRecording) return; // 録音中は形式を切り替えない
+    const FORMAT_CYCLE = ['wav', 'mp3', 'webm'];
+    const FORMAT_LABEL = { wav: 'WAV', mp3: 'MP3', webm: 'WebM' };
+    const idx = FORMAT_CYCLE.indexOf(recordFormat);
+    recordFormat = FORMAT_CYCLE[(idx + 1) % FORMAT_CYCLE.length];
+    document.getElementById('formatToggleBtn').textContent = '形式: ' + FORMAT_LABEL[recordFormat];
   };
   document.getElementById('generateBtn').onclick = generateOtomeHouseGroove;
   document.getElementById('chordRandomBtn').onclick = randomizeChordProgression;
