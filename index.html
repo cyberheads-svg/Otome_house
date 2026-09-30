@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>8小節 乙女ハウス Groovebox</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,700;1,9..144,500&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --wood-dark: #180f1e;
+    --wood: #2a1830;
+    --wood-light: #38213f;
+    --panel: #221429;
+    --brass: #f0b8d8;
+    --brass-bright: #f8d4e8;
+    --teal: #c9a8f0;
+    --rust: #f5d576;
+    --cream: #f8eef5;
+    --muted: #a888a8;
+    --led-off: #3d2545;
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0; padding:18px 14px 40px;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 34px),
+      radial-gradient(ellipse at 30% -10%, #33203c 0%, var(--wood-dark) 55%);
+    color: var(--cream);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .plate{
+    background: linear-gradient(180deg, var(--wood-light), var(--wood));
+    border: 1px solid rgba(0,0,0,0.4);
+    border-radius: 14px;
+    padding: 18px 16px 14px;
+    margin-bottom: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.4);
+    text-align:center;
+    position: relative;
+  }
+  .plate::before{
+    content:"";
+    position:absolute; inset: 6px;
+    border: 1px solid rgba(240,184,216,0.18);
+    border-radius: 10px;
+    pointer-events:none;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-style:italic;
+    font-size: 24px;
+    letter-spacing: 0.3px;
+    margin: 2px 0 2px;
+    color: var(--brass-bright);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.5);
+  }
+  .subtitle{
+    font-family:'Space Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .power-dot{
+    display:inline-block; width:6px; height:6px; border-radius:50%;
+    background: var(--rust); margin-right:6px; vertical-align:middle;
+    box-shadow: 0 0 6px var(--rust);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:0.35;} }
+
+  #main-controls{
+    display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+    margin-bottom: 14px;
+  }
+  button{
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size: 12.5px;
+    letter-spacing: 0.3px;
+    padding: 11px 15px;
+    border-radius: 8px;
+    border: 1px solid rgba(0,0,0,0.35);
+    cursor: pointer;
+    color: var(--cream);
+    background: linear-gradient(180deg, #3c2545, #251530);
+    box-shadow: 0 2px 0 rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+    transition: transform 0.05s ease;
+  }
+  button:active{ transform: translateY(2px); box-shadow: 0 0 0 rgba(0,0,0,0.5); }
+
+  #playBtn{ background: linear-gradient(180deg, #d9b8ee, var(--teal)); color:#1e1030; border-color: rgba(0,0,0,0.5); }
+  #recordBtn{ background: linear-gradient(180deg, #f8e29a, var(--rust)); color:#2a2008; }
+  #generateBtn{ background: linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#2a0f1e; }
+  #vinylBtn{ background: linear-gradient(180deg, #3a2444, #24152c); }
+  #vinylBtn.on{ background: linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#2a0f1e; }
+  #reverbBtn{ background: linear-gradient(180deg, #3a2444, #24152c); }
+  #reverbBtn.on{ background: linear-gradient(180deg, #d9b8ee, var(--teal)); color:#1e1030; }
+  #clearBtn{ background: linear-gradient(180deg, #46414d, #2a2732); }
+
+  .bpm-readout{
+    font-family:'Space Mono', monospace;
+    font-size: 12px;
+    color: var(--brass-bright);
+    background: #140b1a; 
+    border: 1px solid rgba(0,0,0,0.5);
+    border-radius: 8px;
+    padding: 10px 12px;
+    display:flex; align-items:center; gap:8px;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.6);
+  }
+  .bpm-readout button{
+    padding: 3px 8px; font-size: 12px; border-radius:5px;
+    background: #24152c; box-shadow:none;
+  }
+
+  .section{
+    background: var(--panel);
+    border: 1px solid rgba(0,0,0,0.4);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03), 0 4px 12px rgba(0,0,0,0.25);
+  }
+  .section-title{
+    font-family:'Space Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.8px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  #pattern-tabs{ display:flex; gap:5px; flex-wrap:wrap; }
+  .pattern-tab{
+    font-family:'Space Mono', monospace;
+    padding: 7px 10px; font-size: 11.5px;
+    background:#24152c; color: var(--muted);
+    border-radius: 5px; cursor:pointer;
+    border: 1px solid rgba(0,0,0,0.4);
+    text-align: center; line-height: 1.3;
+  }
+  .pattern-tab .role-name{ display:block; font-size:8.5px; opacity:0.75; }
+  .pattern-tab.active{
+    background: var(--brass); color:#2a0f1e; font-weight:700;
+    box-shadow: 0 0 8px rgba(240,184,216,0.5);
+  }
+
+  #arrangement{ display:flex; gap:6px; flex-wrap:wrap; justify-content:center; }
+  .bar-slot{
+    width: 54px; height: 54px;
+    background: #16091c;
+    border: 2px solid var(--led-off);
+    border-radius: 8px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-family:'Space Mono', monospace;
+    color: var(--cream);
+    position: relative;
+    transition: border-color 0.1s, box-shadow 0.1s;
+  }
+  .bar-slot:hover{ border-color: var(--teal); }
+  .bar-slot .barnum{ font-size:8px; color: var(--muted); position:absolute; top:4px; left:6px; }
+  .bar-slot .patname{ font-size:16px; font-weight:700; color: var(--brass-bright); }
+  .bar-slot.playing{
+    border-color: var(--brass-bright);
+    box-shadow: 0 0 14px rgba(248,212,232,0.6);
+    background: #2a1732;
+  }
+
+  #sequencer{ }
+  .step-labels{ display:flex; margin-left: 98px; margin-bottom:6px; }
+  .step-labels > div{ width: 24px; text-align:center; font-size:9px; color: var(--muted); font-family:'Space Mono', monospace; }
+  .step-labels > div.beat{ color: var(--brass); }
+  .track-row{ display:flex; align-items:center; margin-bottom: 9px; gap: 10px; }
+  .track-label{ width: 88px; font-size: 12px; font-weight:600; font-family:'Inter',sans-serif; }
+  .track-sub{ display:block; font-size:8.5px; font-weight:400; color: var(--muted); font-family:'Space Mono', monospace; letter-spacing: 0.5px; }
+  .steps{ display:grid; grid-template-columns: repeat(16, 24px); gap: 4px; }
+  .step{
+    width: 24px; height: 24px;
+    background: #16091c;
+    border: 2px solid var(--led-off);
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .step.beat-line{ border-left: 2px solid rgba(240,184,216,0.35); }
+  .step.active{
+    border-color: #fff;
+    background: var(--active-color);
+    box-shadow: 0 0 8px var(--active-color);
+  }
+  .step.playing{
+    transform: scale(1.18);
+    box-shadow: 0 0 14px #fff, 0 0 4px var(--active-color);
+  }
+
+  /* ベース専用：音程を縦位置で見せるミニ・ピアノロール表示 */
+  .step.bass-step{ position: relative; background: #16091c; border-color: var(--led-off); }
+  .step.bass-step .bass-dot{
+    display:none;
+    position:absolute; left:50%; width: 12px; height: 6px;
+    border-radius: 3px; transform: translate(-50%, -50%);
+    background: var(--active-color, #7986cb);
+    box-shadow: 0 0 6px var(--active-color, #7986cb);
+  }
+  .step.bass-step.active .bass-dot{ display:block; }
+  .step.bass-step.active{ border-color: rgba(121,134,203,0.35); }
+  .step.bass-step .root-line{
+    position:absolute; left:2px; right:2px; top:50%; height:1px;
+    background: rgba(240,184,216,0.18); pointer-events:none;
+  }
+
+  /* ハイハット専用 */
+  .step.hihat-step.hat-open{ box-shadow: 0 0 12px #fff, 0 0 6px var(--active-color); border-color:#fff; }
+
+  .status{
+    text-align:center; margin-top: 10px;
+    font-family:'Space Mono', monospace;
+    font-size: 11.5px; color: var(--muted);
+    letter-spacing: 0.3px;
+  }
+
+  @media (max-width: 480px){
+    .steps{ grid-template-columns: repeat(16, 18px); }
+    .step{ width:18px; height:18px; }
+    .step-labels{ margin-left: 78px; }
+    .step-labels > div{ width:18px; }
+    .track-label{ width: 70px; font-size: 10.5px; }
+    .bar-slot{ width:42px; height:42px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="plate">
+  <div class="subtitle"><span class="power-dot"></span>SPARKLING MELODIC HOUSE ENGINE</div>
+  <h1>8小節 乙女ハウス Groovebox</h1>
+  <div class="subtitle">うねるローリング・ベース &middot; キラキラ・シーケンサー &middot; エレピ &middot; ストリングス</div>
+</div>
+
+<div id="main-controls">
+  <button id="playBtn">▶ 8小節再生</button>
+  <button id="recordBtn">● 録音して保存</button>
+  <button id="formatToggleBtn">形式: WAV</button>
+  <button id="generateBtn">乙女ハウス生成</button>
+  <button id="reverbBtn" class="on">✨ クラブ・リバーブ</button>
+  <button id="vinylBtn" class="on">◉ ヴィンテージ質感</button>
+  <button id="clearBtn">全部クリア</button>
+  <div class="bpm-readout">
+    <button id="bpmDown">−</button>
+    <span id="bpmValue">126</span> BPM
+    <button id="bpmUp">+</button>
+    <span id="swingReadout" style="margin-left:6px; color: var(--muted);"></span>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">コード進行（2小節ホールド・エモーショナルなメロディックハウス）</div>
+  <div style="display:flex; flex-wrap:wrap; gap:8px; align-items:center;">
+    <button id="chordRandomBtn">🎲 コード進行をランダム生成</button>
+  </div>
+  <p id="chordLabel" style="font-family:'Space Mono', monospace; font-size:12px; color: var(--brass-bright); margin: 10px 2px 0;">—</p>
+</div>
+
+<div class="section">
+  <div class="section-title">編集中のパターン（クリックで切り替え／各パターンは曲展開上の役割が異なります）</div>
+  <div id="pattern-tabs"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">8小節のアレンジメント（クリックでパターンを切り替え）</div>
+  <div id="arrangement"></div>
+</div>
+
+<div class="section" id="sequencer-section">
+  <div class="section-title">ステップグリッド（16分音符 × 1小節）</div>
+  <div id="sequencer"></div>
+</div>
+
+<p class="status" id="status">パターンを編集 → アレンジメントで配置 → 再生で8小節の乙女ハウス・グルーヴが流れます</p>
+
+<script>
+// ==================== データ構造 ====================
+let audioCtx, masterGain, warmthFilter, saturator, outputGain, masterOut;
+let reverbInput, reverbWet;
+let vinylNoiseSource, vinylNoiseGain;
+let bassWobbleLFO, bassWobbleGain;
+let isPlaying = false;
+let currentStep = 0;
+let currentBar = 0;
+let bpm = 126;
+let isRecording = false;
+let mediaRecorder, recordedChunks = [];
+let recordFormat = 'wav';
+let scriptNode, silentGain, recordedSamples = [];
+let vinylOn = true;
+let reverbOn = true;
+let arpIndex = 0;
+
+const PATTERN_KEYS = ['A','B','C','D','E','F','G','H'];
+const ROLE_NAMES = { A:'Intro', B:'Groove', C:'Build', D:'Drop', E:'Break(Melo)', F:'Breakdown', G:'Re-Build', H:'Outro' };
+let currentPatternKey = 'A';
+const BAR_COUNT = 8;
+
+let patterns = {};
+PATTERN_KEYS.forEach(key => {
+  patterns[key] = {
+    kick:    new Array(16).fill(false),
+    clap:    new Array(16).fill(false),
+    hihat:   new Array(16).fill(null),
+    bass:    new Array(16).fill(null),
+    pluck:   new Array(16).fill(false),
+    epiano:  new Array(16).fill(false),
+    strings: new Array(16).fill(false),
+  };
+});
+
+let arrangement = new Array(BAR_COUNT).fill('A');
+
+const tracks = [
+  { id: 'kick',    name: 'キック',           sub: '4-ON-FLOOR',  color: '#c8543a' },
+  { id: 'clap',    name: 'クラップ',         sub: 'HOUSE BACKBEAT', color: '#f5d576' },
+  { id: 'hihat',   name: 'ハイハット',       sub: 'OFFBEAT OPEN', color: '#f0b8d8' },
+  { id: 'bass',    name: 'ベース',           sub: 'ROLLING WOBBLE', color: '#7986cb' },
+  { id: 'pluck',   name: 'シーケンサー',     sub: 'KIRAKIRA',    color: '#c9a8f0' },
+  { id: 'epiano',  name: 'エレピ',           sub: 'STAB',        color: '#68b0c4' },
+  { id: 'strings', name: 'ストリングス',     sub: 'PUMPING PAD', color: '#8fbf7a' },
+];
+
+// ==================== コード進行（2小節ホールド） ====================
+let chordProgression = [];
+function chordForBar(barNum) {
+  return chordProgression[Math.floor(barNum / 2) % chordProgression.length];
+}
+
+const CHROMATIC = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
+const ROOT_POOL = [
+  { idx: 0, freq: 130.81 }, { idx: 2, freq: 146.83 }, { idx: 3, freq: 155.56 },
+  { idx: 4, freq: 164.81 }, { idx: 5, freq: 174.61 }, { idx: 7, freq: 196.00 },
+  { idx: 8, freq: 207.65 }, { idx: 9, freq: 220.00 }, { idx: 10, freq: 233.08 },
+  { idx: 11, freq: 246.94 }, { idx: 0, freq: 261.63 }, { idx: 2, freq: 293.66 },
+];
+const CHORD_QUALITIES = {
+  maj9: { tensionIntervals: [4, 7, 11, 14], suffix: 'maj9' },
+  m9:   { tensionIntervals: [3, 7, 10, 14], suffix: 'm9' },
+  maj7: { tensionIntervals: [4, 7, 11, 12], suffix: 'maj7' },
+  six9: { tensionIntervals: [4, 7, 9, 14],  suffix: '6/9' }, // トランス・ハウスの定番「キラキラ」コード
+};
+const CHORD_MOODS = [
+  { name: 'エモーショナル・メジャー', degrees: [{ d: 0, q: 'maj9' }, { d: 9, q: 'm9' }, { d: 5, q: 'six9' }, { d: 7, q: 'maj9' }] },
+  { name: '切ないマイナー→メジャー', degrees: [{ d: 0, q: 'm9' }, { d: 8, q: 'six9' }, { d: 3, q: 'maj9' }, { d: 10, q: 'six9' }] },
+  { name: 'トランス・ハウス風', degrees: [{ d: 0, q: 'm9' }, { d: 5, q: 'm9' }, { d: 8, q: 'maj7' }, { d: 7, q: 'maj7' }] },
+  { name: 'キラキラ・アップリフト', degrees: [{ d: 0, q: 'six9' }, { d: 9, q: 'm9' }, { d: 5, q: 'six9' }, { d: 7, q: 'six9' }] },
+];
+
+function buildChord(rootFreq, rootChromIdx, deg, qualityKey) {
+  const q = CHORD_QUALITIES[qualityKey];
+  const chordRootFreq = rootFreq * Math.pow(2, deg / 12);
+  const tensions = q.tensionIntervals.map(iv => chordRootFreq * Math.pow(2, iv / 12));
+  const noteName = CHROMATIC[(rootChromIdx + deg) % 12];
+  return { root: chordRootFreq, tensions, label: noteName + q.suffix };
+}
+
+function randomizeChordProgression() {
+  const root = ROOT_POOL[Math.floor(Math.random() * ROOT_POOL.length)];
+  const mood = CHORD_MOODS[Math.floor(Math.random() * CHORD_MOODS.length)];
+  chordProgression = mood.degrees.map(deg => buildChord(root.freq, root.idx, deg.d, deg.q));
+  const labels = chordProgression.map(c => c.label + '×2小節');
+  const label = document.getElementById('chordLabel');
+  if (label) label.textContent = `${mood.name}： ${labels.join(' → ')}`;
+  const status = document.getElementById('status');
+  if (status) status.textContent = 'コード進行をランダムに変更しました（2小節ずつホールド）';
+}
+
+const BASS_TOKEN_SEMITONES = { root: 0, fifth: 7, octave: 12 };
+const BASS_TOKEN_LABEL = { root: 'ルート', fifth: '5th', octave: 'オクターブ' };
+const BASS_TOKEN_VISUAL_TOP = { root: '55%', fifth: '35%', octave: '15%' };
+
+// ==================== Audio エンジン ====================
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.9;
+
+    warmthFilter = audioCtx.createBiquadFilter();
+    warmthFilter.type = 'lowpass';
+    warmthFilter.frequency.value = 10000;
+    warmthFilter.Q.value = 0.25;
+
+    saturator = audioCtx.createWaveShaper();
+    saturator.curve = makeSaturationCurve(6);
+    saturator.oversample = '2x';
+
+    outputGain = audioCtx.createGain();
+    outputGain.gain.value = 0.95;
+
+    masterOut = audioCtx.createGain();
+    masterOut.gain.value = 1.0;
+
+    masterGain.connect(warmthFilter);
+    warmthFilter.connect(saturator);
+    saturator.connect(outputGain);
+
+    outputGain.connect(masterOut);
+
+    setupClubReverb();
+
+    masterOut.connect(audioCtx.destination);
+
+    setupVinylNoise();
+
+    // ベース用の継続的な「うねり」LFO（フィルターカットオフを揺らす）
+    bassWobbleLFO = audioCtx.createOscillator();
+    bassWobbleLFO.type = 'sine';
+    bassWobbleLFO.frequency.value = 0.6;
+    bassWobbleGain = audioCtx.createGain();
+    bassWobbleGain.gain.value = 260;
+    bassWobbleLFO.connect(bassWobbleGain);
+    bassWobbleLFO.start();
+  }
+  return audioCtx;
+}
+
+function makeSaturationCurve(amount) {
+  const n = 1024;
+  const curve = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const x = (i * 2) / n - 1;
+    curve[i] = Math.tanh(x * (1 + amount * 0.05)) / Math.tanh(1 + amount * 0.05);
+  }
+  return curve;
+}
+
+// ---- 並列コムフィルター式のクラブ・リバーブ ----
+function setupClubReverb() {
+  reverbInput = audioCtx.createGain();
+  reverbWet = audioCtx.createGain();
+  reverbWet.gain.value = reverbOn ? 0.22 : 0;
+
+  const combTimes = [0.035, 0.045, 0.058, 0.071];
+  combTimes.forEach(t => {
+    const delay = audioCtx.createDelay(0.25);
+    delay.delayTime.value = t;
+    const fb = audioCtx.createGain();
+    fb.gain.value = 0.42;
+    const damp = audioCtx.createBiquadFilter();
+    damp.type = 'lowpass';
+    damp.frequency.value = 4500;
+
+    reverbInput.connect(delay);
+    delay.connect(damp);
+    damp.connect(fb);
+    fb.connect(delay);
+    damp.connect(reverbWet);
+  });
+
+  outputGain.connect(reverbInput);
+  reverbWet.connect(masterOut);
+}
+
+function setupVinylNoise(){
+  const bufferSize = audioCtx.sampleRate * 2;
+  const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  let lastOut = 0;
+  for (let i = 0; i < bufferSize; i++) {
+    const white = Math.random() * 2 - 1;
+    const crackle = Math.random() > 0.9992 ? (Math.random() * 2 - 1) * 0.4 : 0;
+    lastOut = (lastOut + 0.02 * white) / 1.02;
+    data[i] = lastOut * 2 + crackle;
+  }
+  vinylNoiseSource = audioCtx.createBufferSource();
+  vinylNoiseSource.buffer = buffer;
+  vinylNoiseSource.loop = true;
+
+  const vinylFilter = audioCtx.createBiquadFilter();
+  vinylFilter.type = 'highpass';
+  vinylFilter.frequency.value = 2400;
+
+  vinylNoiseGain = audioCtx.createGain();
+  vinylNoiseGain.gain.value = vinylOn ? 0.009 : 0.0;
+
+  vinylNoiseSource.connect(vinylFilter);
+  vinylFilter.connect(vinylNoiseGain);
+  vinylNoiseGain.connect(masterOut);
+  vinylNoiseSource.start();
+}
+
+async function ensureAudio() {
+  const ctx = getAudioContext();
+  if (ctx.state === 'suspended') await ctx.resume();
+}
+
+// ---- キック：クリーンなハウス・フォーオンザフロア ----
+function playKick(time, velocity) {
+  velocity = velocity || 1;
+  const ctx = audioCtx;
+  const osc = ctx.createOscillator(); osc.type = 'sine';
+  osc.frequency.setValueAtTime(145 + (Math.random() * 4 - 2), time);
+  const decay = 0.17 * (0.9 + Math.random() * 0.2);
+  osc.frequency.exponentialRampToValueAtTime(46, time + decay);
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(1.1 * velocity, time);
+  gain.gain.exponentialRampToValueAtTime(0.001, time + 0.32 * (0.9 + Math.random() * 0.2));
+  osc.connect(gain); gain.connect(masterGain);
+  osc.start(time); osc.stop(time + 0.36);
+}
+
+// ---- クラップ：ハウスらしい重なりのあるクラップ ----
+function playClap(time, velocity) {
+  velocity = velocity || 1;
+  const ctx = audioCtx;
+  const offsets = [0, 0.012, 0.024, 0.036];
+  offsets.forEach((off, i) => {
+    const dur = 0.055;
+    const noise = ctx.createBufferSource();
+    const buffer = ctx.createBuffer(1, Math.max(1, ctx.sampleRate * dur), ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let n = 0; n < data.length; n++) data[n] = Math.random() * 2 - 1;
+    noise.buffer = buffer;
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1600; f.Q.value = 1.2;
+    const g = ctx.createGain();
+    const peak = (i === offsets.length - 1 ? 0.38 : 0.2) * velocity;
+    g.gain.setValueAtTime(peak, time + off);
+    g.gain.exponentialRampToValueAtTime(0.001, time + off + dur);
+    noise.connect(f); f.connect(g); g.connect(masterGain);
+    noise.start(time + off);
+  });
+}
+
+// ---- ハイハット：クローズド8分 + 裏拍のオープン（定番のハウス・ハット） ----
+function playHiHat(time, type, velocity) {
+  velocity = velocity || 1;
+  const ctx = audioCtx;
+  const dur = (type === 'open' ? 0.22 : 0.05) * (0.9 + Math.random() * 0.2);
+  const gainVal = type === 'open' ? 0.24 : 0.17;
+  const noise = ctx.createBufferSource();
+  const buffer = ctx.createBuffer(1, Math.max(1, ctx.sampleRate * dur), ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  noise.buffer = buffer;
+  const f = ctx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 7800;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(gainVal * velocity, time);
+  g.gain.exponentialRampToValueAtTime(0.001, time + dur);
+  noise.connect(f); f.connect(g); g.connect(masterGain);
+  noise.start(time);
+}
+
+// ---- ベース：フィルターLFOで継続的にうねる、重いローリング・ベース ----
+function playBassNote(time, freq, velocity) {
+  const ctx = audioCtx;
+  const osc = ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = freq;
+  const sub = ctx.createOscillator(); sub.type = 'sine'; sub.frequency.value = freq * 0.5;
+  const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.Q.value = 6;
+  filter.frequency.setValueAtTime(260, time);
+  filter.frequency.exponentialRampToValueAtTime(820, time + 0.02);
+  const decay = 0.2 * (0.85 + Math.random() * 0.3);
+  filter.frequency.exponentialRampToValueAtTime(230, time + decay);
+  if (bassWobbleGain) bassWobbleGain.connect(filter.frequency); // 継続的なうねりを重ねる
+
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(0.001, time);
+  g.gain.linearRampToValueAtTime(0.6 * velocity, time + 0.008);
+  g.gain.exponentialRampToValueAtTime(0.001, time + decay);
+  osc.connect(filter); sub.connect(filter); filter.connect(g); g.connect(masterGain);
+  osc.start(time); sub.start(time);
+  osc.stop(time + decay + 0.05); sub.stop(time + decay + 0.05);
+}
+
+function playBass(time, barNum, token, velocity) {
+  velocity = velocity || 1;
+  const chord = chordForBar(barNum);
+  const rootFreq = chord.root / 2;
+  const semitone = BASS_TOKEN_SEMITONES[token] !== undefined ? BASS_TOKEN_SEMITONES[token] : 0;
+  const freq = rootFreq * Math.pow(2, semitone / 12);
+  playBassNote(time, freq, velocity);
+}
+
+// ---- シーケンサー（キラキラ）：トランス風のスパークル・プラック ----
+function playPluckNote(time, freq, velocity) {
+  const ctx = audioCtx;
+  const osc1 = ctx.createOscillator(); osc1.type = 'sawtooth';
+  osc1.frequency.setValueAtTime(freq * 1.15, time);
+  osc1.frequency.exponentialRampToValueAtTime(freq, time + 0.045);
+  const osc2 = ctx.createOscillator(); osc2.type = 'triangle'; osc2.frequency.value = freq * 1.004;
+  const sparkle = ctx.createOscillator(); sparkle.type = 'sine'; sparkle.frequency.value = freq * 4;
+  const sparkleGain = ctx.createGain();
+  sparkleGain.gain.setValueAtTime(0.12, time);
+  sparkleGain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+
+  const mix = ctx.createGain(); mix.gain.value = 0.45;
+  osc1.connect(mix); osc2.connect(mix); sparkle.connect(sparkleGain); sparkleGain.connect(mix);
+
+  const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 5200; filter.Q.value = 0.7;
+  mix.connect(filter);
+
+  const ampEnv = ctx.createGain();
+  ampEnv.gain.setValueAtTime(0.0001, time);
+  ampEnv.gain.linearRampToValueAtTime(Math.max(0.02, velocity), time + 0.006);
+  const decay = 0.32 * (0.85 + Math.random() * 0.3);
+  ampEnv.gain.exponentialRampToValueAtTime(0.001, time + decay);
+
+  filter.connect(ampEnv); ampEnv.connect(masterGain);
+  osc1.start(time); osc2.start(time); sparkle.start(time);
+  const stopT = time + decay + 0.08;
+  osc1.stop(stopT); osc2.stop(stopT); sparkle.stop(stopT);
+}
+
+function playPluck(time, barNum, velocity) {
+  velocity = velocity || 1;
+  const chord = chordForBar(barNum);
+  const note = chord.tensions[arpIndex % chord.tensions.length];
+  arpIndex++;
+  playPluckNote(time, note, 0.26 * velocity);
+}
+
+// ---- エレピ：FMベルトーンのシンコペーション・スタブ ----
+function playEpianoNote(time, freq, velocity, delay) {
+  const ctx = audioCtx;
+  const t0 = time + (delay || 0);
+  const carrier = ctx.createOscillator(); carrier.type = 'sine'; carrier.frequency.value = freq;
+  const modulator = ctx.createOscillator(); modulator.type = 'sine'; modulator.frequency.value = freq * 2.01;
+  const modGain = ctx.createGain();
+  modGain.gain.setValueAtTime(freq * 0.5, t0);
+  modGain.gain.exponentialRampToValueAtTime(0.01, t0 + 0.35);
+  modulator.connect(modGain); modGain.connect(carrier.frequency);
+
+  const ampEnv = ctx.createGain();
+  ampEnv.gain.setValueAtTime(0.0001, t0);
+  ampEnv.gain.linearRampToValueAtTime(Math.max(0.02, velocity), t0 + 0.008);
+  const decay = 0.42 * (0.85 + Math.random() * 0.3);
+  ampEnv.gain.exponentialRampToValueAtTime(0.001, t0 + decay);
+
+  carrier.connect(ampEnv); ampEnv.connect(masterGain);
+  carrier.start(t0); modulator.start(t0);
+  const stopT = t0 + decay + 0.1;
+  carrier.stop(stopT); modulator.stop(stopT);
+}
+
+function playEpiano(time, barNum, velocity) {
+  velocity = velocity || 1;
+  const chord = chordForBar(barNum);
+  chord.tensions.forEach((freq, i) => {
+    playEpianoNote(time, freq, (0.22 - i * 0.02) * velocity, i * 0.004);
+  });
+}
+
+// ---- ストリングス：ビブラート付き、サイドチェイン風にキックへ合わせてポンピング ----
+function playStringsVoice(time, freq, velocity, beatSec) {
+  const ctx = audioCtx;
+  const osc1 = ctx.createOscillator(); osc1.type = 'sawtooth'; osc1.frequency.value = freq * 0.997;
+  const osc2 = ctx.createOscillator(); osc2.type = 'sawtooth'; osc2.frequency.value = freq * 1.003;
+  const vibrato = ctx.createOscillator(); vibrato.type = 'sine'; vibrato.frequency.value = 4.8;
+  const vibratoGain = ctx.createGain(); vibratoGain.gain.value = freq * 0.004;
+  vibrato.connect(vibratoGain); vibratoGain.connect(osc1.frequency); vibratoGain.connect(osc2.frequency);
+
+  const mix = ctx.createGain(); mix.gain.value = 0.5;
+  osc1.connect(mix); osc2.connect(mix);
+  const filter = ctx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 3400; filter.Q.value = 0.3;
+  mix.connect(filter);
+
+  const totalDur = beatSec * 4 * 0.98;
+  const ampEnv = ctx.createGain();
+  ampEnv.gain.setValueAtTime(0.0001, time);
+  ampEnv.gain.linearRampToValueAtTime(velocity, time + 0.4);
+
+  for (let beat = 1; beat < 4; beat++) {
+    const beatTime = time + beat * beatSec;
+    ampEnv.gain.setValueAtTime(velocity, Math.max(beatTime - 0.03, time + 0.4));
+    ampEnv.gain.linearRampToValueAtTime(velocity * 0.4, beatTime + 0.05);
+    ampEnv.gain.linearRampToValueAtTime(velocity, beatTime + beatSec * 0.55);
+  }
+  ampEnv.gain.exponentialRampToValueAtTime(0.001, time + totalDur);
+
+  filter.connect(ampEnv); ampEnv.connect(masterGain);
+  osc1.start(time); osc2.start(time); vibrato.start(time);
+  const stopT = time + totalDur + 0.15;
+  osc1.stop(stopT); osc2.stop(stopT); vibrato.stop(stopT);
+}
+
+function playStrings(time, barNum, velocity) {
+  velocity = velocity || 1;
+  const chord = chordForBar(barNum);
+  const beatSec = stepSeconds() * 4;
+  const notes = chord.tensions.slice(0, 2);
+  notes.forEach((freq, i) => {
+    playStringsVoice(time, freq, velocity * (0.35 - i * 0.06), beatSec);
+  });
+}
+
+function playSoundForTrack(trackId, time, barNum, val, velocity) {
+  if (trackId === 'kick') playKick(time, velocity);
+  else if (trackId === 'clap') playClap(time, velocity);
+  else if (trackId === 'hihat') playHiHat(time, val, velocity);
+  else if (trackId === 'bass') playBass(time, barNum, val, velocity);
+  else if (trackId === 'pluck') playPluck(time, barNum, velocity);
+  else if (trackId === 'epiano') playEpiano(time, barNum, velocity);
+  else if (trackId === 'strings') playStrings(time, barNum, velocity);
+}
+
+// ==================== ① ベース：ルート/5th/オクターブを巡回する重いローリング・パターン ====================
+const BASS_CELLS = {
+  rollSparse: [ { s:0, d:'root' }, { s:8, d:'root' } ],
+  rollBasic:  [ { s:0, d:'root' }, { s:2, d:'fifth' }, { s:4, d:'root' }, { s:6, d:'octave' },
+                { s:8, d:'root' }, { s:10, d:'fifth' }, { s:12, d:'root' }, { s:14, d:'octave' } ],
+  rollBusy:   [ { s:0, d:'root' }, { s:1, d:'fifth' }, { s:2, d:'root' }, { s:3, d:'octave' },
+                { s:4, d:'root' }, { s:5, d:'fifth' }, { s:6, d:'root' }, { s:7, d:'octave' },
+                { s:8, d:'root' }, { s:9, d:'fifth' }, { s:10, d:'root' }, { s:11, d:'octave' },
+                { s:12, d:'root' }, { s:13, d:'fifth' }, { s:14, d:'root' }, { s:15, d:'octave' } ],
+  none: [],
+};
+const ROLE_BASS_CELL = { A:'rollSparse', B:'rollBasic', C:'rollBasic', D:'rollBusy', E:'rollSparse', F:'none', G:'rollBusy', H:'rollSparse' };
+
+function buildBassFromCell(cellKey) {
+  const cell = BASS_CELLS[cellKey];
+  const arr = new Array(16).fill(null);
+  cell.forEach(hit => { arr[hit.s] = hit.d; });
+  return arr;
+}
+
+// ==================== ドラム：役割ごとの固定ハウス・ビート ====================
+const ROLE_DRUMS = {
+  A: { kick:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], clap:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] },
+  B: { kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] },
+  C: { kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0], clap:[0,0,0,0,1,0,0,0,0,0,1,0,1,0,1,1] }, // Build：クラップロールで盛り上げ
+  D: { kick:[1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,1], clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0] }, // Drop
+  E: { kick:[1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0], clap:[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0] }, // Break(Melo)
+  F: { kick:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], clap:[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0] }, // Breakdown
+  G: { kick:[1,0,1,0,1,0,0,1,1,0,1,0,1,0,1,1], clap:[0,0,0,0,1,0,0,0,0,0,0,0,1,0,1,1] }, // Re-Build
+  H: { kick:[1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0], clap:[0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0] }, // Outro
+};
+
+// ==================== ハイハット：クローズド8分＋裏拍オープン（ハウスの定番） ====================
+const ROLE_HAT_DENSITY = { A:0.1, B:0.6, C:0.7, D:0.8, E:0.3, F:0.05, G:0.85, H:0.15 };
+function generateHihat(role) {
+  const density = ROLE_HAT_DENSITY[role] !== undefined ? ROLE_HAT_DENSITY[role] : 0.6;
+  const arr = new Array(16).fill(null);
+  for (let s = 0; s < 16; s += 2) {
+    if (Math.random() < density) arr[s] = 'closed';
+  }
+  [2, 6, 10, 14].forEach(s => {
+    if (Math.random() < density * 0.8) arr[s] = 'open';
+  });
+  return arr;
+}
+
+// ==================== ③ シーケンサー：役割ごとのトリガー密度 ====================
+const PLUCK_CELLS = {
+  A: [0,6,10],
+  B: [0,2,4,6,8,10,12,14],
+  C: [0,2,4,6,8,9,10,11,12,13,14,15],
+  D: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15], // Drop：常時16分のアイコニックなキラキラ
+  E: [0,4,8,12],
+  F: [0,8],
+  G: [0,2,4,6,8,9,10,11,12,13,14,15],
+  H: [0,6,12],
+};
+function generatePluck(role) {
+  const arr = new Array(16).fill(false);
+  (PLUCK_CELLS[role] || []).forEach(s => { arr[s] = true; });
+  return arr;
+}
+
+// ==================== ④ エレピ：シンコペーションのスタブ位置 ====================
+const EPIANO_HITS = {
+  A: [4,12],
+  B: [2,6,10,14],
+  C: [0,2,6,10,14],
+  D: [0,2,4,6,8,10,12,14],
+  E: [4,12],
+  F: [0,4,8,12],
+  G: [2,6,10,14],
+  H: [4,12],
+};
+function generateEpiano(role) {
+  const arr = new Array(16).fill(false);
+  (EPIANO_HITS[role] || []).forEach(s => { arr[s] = true; });
+  return arr;
+}
+
+// ==================== ⑤ ストリングス：常に鳴らして役割ごとに音量だけ変える ====================
+const ROLE_STRINGS_VELOCITY = { A:0.45, B:0.5, C:0.6, D:0.7, E:0.55, F:0.8, G:0.65, H:0.4 };
+
+// 8小節の構成テンプレート・プール
+const ARRANGEMENT_TEMPLATES = [
+  ['A','B','C','D','B','C','D','H'],
+  ['A','B','D','E','F','G','D','H'],
+  ['A','B','C','D','F','D','G','H'],
+  ['A','B','D','B','D','E','D','H'],
+  ['A','B','C','D','B','F','G','H'],
+];
+
+// ==================== 全体生成 ====================
+function generateOtomeHouseGroove() {
+  PATTERN_KEYS.forEach((key) => {
+    const p = patterns[key];
+    const role = key;
+
+    const drums = ROLE_DRUMS[role];
+    p.kick = drums.kick.map(v => !!v);
+    p.clap = drums.clap.map(v => !!v);
+
+    p.hihat = generateHihat(role);
+    p.bass = buildBassFromCell(ROLE_BASS_CELL[role]);
+    p.pluck = generatePluck(role);
+    p.epiano = generateEpiano(role);
+
+    p.strings = new Array(16).fill(false);
+    p.strings[0] = true;
+  });
+
+  const template = ARRANGEMENT_TEMPLATES[Math.floor(Math.random() * ARRANGEMENT_TEMPLATES.length)];
+  arrangement = template.slice();
+
+  refreshAllUI();
+  document.getElementById('status').textContent = '乙女ハウス風の8小節グルーヴを生成しました！ 再生してみてください';
+}
+
+// ==================== UI ====================
+function createPatternTabs() {
+  const container = document.getElementById('pattern-tabs');
+  container.innerHTML = '';
+  PATTERN_KEYS.forEach(key => {
+    const tab = document.createElement('div');
+    tab.className = 'pattern-tab';
+    tab.innerHTML = `${key}<span class="role-name">${ROLE_NAMES[key]}</span>`;
+    if (key === currentPatternKey) tab.classList.add('active');
+    tab.onclick = () => {
+      currentPatternKey = key;
+      createPatternTabs();
+      createSequencer();
+    };
+    container.appendChild(tab);
+  });
+}
+
+function createArrangement() {
+  const container = document.getElementById('arrangement');
+  container.innerHTML = '';
+  arrangement.forEach((pat, index) => {
+    const slot = document.createElement('div');
+    slot.className = 'bar-slot';
+    slot.innerHTML = `<span class="barnum">${index + 1}</span><span class="patname">${pat}</span>`;
+    slot.title = ROLE_NAMES[pat];
+    slot.onclick = () => {
+      const currentIdx = PATTERN_KEYS.indexOf(pat);
+      const nextIdx = (currentIdx + 1) % PATTERN_KEYS.length;
+      arrangement[index] = PATTERN_KEYS[nextIdx];
+      createArrangement();
+    };
+    container.appendChild(slot);
+  });
+}
+
+function createSequencer() {
+  const container = document.getElementById('sequencer');
+  container.innerHTML = '';
+
+  const labels = document.createElement('div');
+  labels.className = 'step-labels';
+  for (let i = 0; i < 16; i++) {
+    const d = document.createElement('div');
+    d.textContent = i + 1;
+    if (i % 4 === 0) d.classList.add('beat');
+    labels.appendChild(d);
+  }
+  container.appendChild(labels);
+
+  const currentPattern = patterns[currentPatternKey];
+  const BASS_CYCLE = [null, 'root', 'fifth', 'octave'];
+  const HAT_CYCLE = [null, 'closed', 'open'];
+
+  tracks.forEach(track => {
+    const row = document.createElement('div');
+    row.className = 'track-row';
+
+    const label = document.createElement('div');
+    label.className = 'track-label';
+    label.style.color = track.color;
+    label.innerHTML = `${track.name}<span class="track-sub">${track.sub}</span>`;
+    row.appendChild(label);
+
+    const stepsDiv = document.createElement('div');
+    stepsDiv.className = 'steps';
+
+    for (let s = 0; s < 16; s++) {
+      const btn = document.createElement('button');
+      btn.className = 'step';
+      if (s % 4 === 0) btn.classList.add('beat-line');
+      btn.dataset.step = s;
+      btn.style.setProperty('--active-color', track.color);
+
+      if (track.id === 'bass') {
+        btn.classList.add('bass-step');
+        const rootLine = document.createElement('div');
+        rootLine.className = 'root-line';
+        btn.appendChild(rootLine);
+        const dot = document.createElement('div');
+        dot.className = 'bass-dot';
+        btn.appendChild(dot);
+
+        const setBassVisual = () => {
+          const val = currentPattern.bass[s];
+          if (val === null || val === undefined) {
+            btn.classList.remove('active');
+            btn.title = '';
+          } else {
+            btn.classList.add('active');
+            dot.style.top = BASS_TOKEN_VISUAL_TOP[val] || '55%';
+            btn.title = BASS_TOKEN_LABEL[val] || val;
+          }
+        };
+        setBassVisual();
+
+        btn.onclick = () => {
+          const val = currentPattern.bass[s];
+          const idx = BASS_CYCLE.indexOf(val);
+          currentPattern.bass[s] = BASS_CYCLE[(idx + 1) % BASS_CYCLE.length];
+          setBassVisual();
+        };
+      } else if (track.id === 'hihat') {
+        btn.classList.add('hihat-step');
+        const setHatVisual = () => {
+          const val = currentPattern.hihat[s];
+          btn.classList.remove('active', 'hat-open');
+          if (val === null || val === undefined) { btn.title = ''; return; }
+          btn.classList.add('active');
+          if (val === 'open') { btn.classList.add('hat-open'); btn.title = 'オープンハット'; }
+          else { btn.title = 'クローズドハット'; }
+        };
+        setHatVisual();
+        btn.onclick = () => {
+          const val = currentPattern.hihat[s];
+          const idx = HAT_CYCLE.indexOf(val);
+          currentPattern.hihat[s] = HAT_CYCLE[(idx + 1) % HAT_CYCLE.length];
+          setHatVisual();
+        };
+      } else {
+        if (currentPattern[track.id][s]) {
+          btn.classList.add('active');
+        }
+        btn.onclick = () => {
+          currentPattern[track.id][s] = !currentPattern[track.id][s];
+          btn.classList.toggle('active', !!currentPattern[track.id][s]);
+        };
+      }
+      stepsDiv.appendChild(btn);
+    }
+    row.appendChild(stepsDiv);
+    container.appendChild(row);
+  });
+}
+
+function refreshAllUI() {
+  createPatternTabs();
+  createArrangement();
+  createSequencer();
+}
+
+// ==================== 再生（軽いハウス・グルーヴのスウィング + Humanize） ====================
+let schedulerHandle = null;
+let nextStepTime = 0;
+let scheduleStepIndex = 0;
+let scheduleBarIndex = 0;
+let uiQueue = [];
+const lookaheadMs = 25;
+const scheduleAheadTime = 0.12;
+
+const SWING_MIN_BPM = 118, SWING_MAX_BPM = 132;
+const SWING_MAX = 0.14, SWING_MIN = 0.07;
+function currentSwingAmount() {
+  const t = Math.max(0, Math.min(1, (bpm - SWING_MIN_BPM) / (SWING_MAX_BPM - SWING_MIN_BPM)));
+  return SWING_MAX - t * (SWING_MAX - SWING_MIN);
+}
+function updateSwingReadout() {
+  const el = document.getElementById('swingReadout');
+  if (el) el.textContent = `/ Groove ${Math.round(currentSwingAmount() * 100)}%`;
+}
+
+function stepSeconds() { return 60 / bpm / 4; }
+
+const TIMING_JITTER = { kick: 0.004, clap: 0.006, hihat: 0.007, bass: 0.005, pluck: 0.006, epiano: 0.008, strings: 0.012 };
+
+function scheduleStep(stepNum, barNum, time) {
+  const patKey = arrangement[barNum];
+  const pat = patterns[patKey];
+  tracks.forEach(track => {
+    const val = pat[track.id][stepNum];
+    const isOn = (track.id === 'bass' || track.id === 'hihat') ? (val !== null && val !== undefined) : !!val;
+    if (!isOn) return;
+    const jitterRange = TIMING_JITTER[track.id] || 0.008;
+    const jTime = time + (Math.random() * 2 - 1) * jitterRange;
+    let velocity = 0.88 + Math.random() * 0.24;
+    if (track.id === 'strings') velocity = ROLE_STRINGS_VELOCITY[patKey] !== undefined ? ROLE_STRINGS_VELOCITY[patKey] : 0.6;
+    playSoundForTrack(track.id, jTime, barNum, val, velocity);
+  });
+  uiQueue.push({ stepNum, barNum, time });
+}
+
+function advanceScheduler() {
+  scheduleStepIndex++;
+  if (scheduleStepIndex >= 16) {
+    scheduleStepIndex = 0;
+    scheduleBarIndex = (scheduleBarIndex + 1) % BAR_COUNT;
+  }
+}
+
+function schedulerLoop() {
+  while (nextStepTime < audioCtx.currentTime + scheduleAheadTime) {
+    const swing = (scheduleStepIndex % 2 === 1) ? stepSeconds() * currentSwingAmount() : 0;
+    scheduleStep(scheduleStepIndex, scheduleBarIndex, nextStepTime + swing);
+    nextStepTime += stepSeconds();
+    advanceScheduler();
+  }
+  schedulerHandle = setTimeout(schedulerLoop, lookaheadMs);
+}
+
+let uiRafHandle = null;
+function uiLoop() {
+  const now = audioCtx.currentTime;
+  while (uiQueue.length && uiQueue[0].time <= now) {
+    const ev = uiQueue.shift();
+    currentStep = ev.stepNum;
+    currentBar = ev.barNum;
+    highlightUI();
+  }
+  uiRafHandle = requestAnimationFrame(uiLoop);
+}
+
+function highlightUI() {
+  document.querySelectorAll('.step.playing').forEach(el => el.classList.remove('playing'));
+  document.querySelectorAll('.bar-slot.playing').forEach(el => el.classList.remove('playing'));
+
+  const barSlots = document.querySelectorAll('.bar-slot');
+  if (barSlots[currentBar]) barSlots[currentBar].classList.add('playing');
+
+  const patKey = arrangement[currentBar];
+  if (patKey !== currentPatternKey) return;
+  const pat = patterns[patKey];
+  tracks.forEach((track, rowIdx) => {
+    const row = document.querySelectorAll('.track-row')[rowIdx];
+    if (!row) return;
+    const btn = row.querySelector(`.step[data-step="${currentStep}"]`);
+    const val = pat[track.id][currentStep];
+    const isOn = (track.id === 'bass' || track.id === 'hihat') ? (val !== null && val !== undefined) : !!val;
+    if (btn && isOn) btn.classList.add('playing');
+  });
+}
+
+function startPlayback() {
+  stopPlayback();
+  nextStepTime = audioCtx.currentTime + 0.05;
+  scheduleStepIndex = 0;
+  scheduleBarIndex = 0;
+  uiQueue = [];
+  arpIndex = 0;
+  schedulerLoop();
+  uiLoop();
+}
+
+function stopPlayback() {
+  if (schedulerHandle) clearTimeout(schedulerHandle);
+  if (uiRafHandle) cancelAnimationFrame(uiRafHandle);
+  schedulerHandle = null;
+  uiRafHandle = null;
+  uiQueue = [];
+  document.querySelectorAll('.step.playing').forEach(el => el.classList.remove('playing'));
+  document.querySelectorAll('.bar-slot.playing').forEach(el => el.classList.remove('playing'));
+}
+
+function togglePlay() {
+  isPlaying = !isPlaying;
+  const btn = document.getElementById('playBtn');
+  if (isPlaying) {
+    ensureAudio().then(() => {
+      btn.textContent = '⏸ 停止';
+      startPlayback();
+    });
+  } else {
+    btn.textContent = '▶ 8小節再生';
+    stopPlayback();
+  }
+}
+
+// ==================== 録音 ====================
+function toggleRecord() {
+  if (recordFormat === 'wav') toggleRecordWav();
+  else toggleRecordWebm();
+}
+
+function toggleRecordWebm() {
+  const btn = document.getElementById('recordBtn');
+  if (!isRecording) {
+    ensureAudio().then(() => {
+      const dest = audioCtx.createMediaStreamDestination();
+      masterOut.connect(dest);
+      mediaRecorder = new MediaRecorder(dest.stream);
+      recordedChunks = [];
+      mediaRecorder.ondataavailable = e => recordedChunks.push(e.data);
+      mediaRecorder.onstop = () => {
+        masterOut.disconnect(dest);
+        const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `8bar_otomehouse_${Date.now()}.webm`;
+        a.click();
+        document.getElementById('status').textContent = 'WebMファイルを書き出しました';
+      };
+      mediaRecorder.start();
+      isRecording = true;
+      btn.textContent = '■ 録音停止';
+      document.getElementById('status').textContent = '8小節をWebMで録音中...';
+    });
+  } else {
+    if (mediaRecorder) mediaRecorder.stop();
+    isRecording = false;
+    btn.textContent = '● 録音して保存';
+  }
+}
+
+function toggleRecordWav() {
+  const btn = document.getElementById('recordBtn');
+  if (!isRecording) {
+    ensureAudio().then(() => {
+      recordedSamples = [];
+      const bufferSize = 4096;
+      scriptNode = audioCtx.createScriptProcessor(bufferSize, 1, 1);
+      silentGain = audioCtx.createGain();
+      silentGain.gain.value = 0;
+
+      masterOut.connect(scriptNode);
+      scriptNode.connect(silentGain);
+      silentGain.connect(audioCtx.destination);
+
+      scriptNode.onaudioprocess = (e) => {
+        recordedSamples.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+      };
+
+      isRecording = true;
+      btn.textContent = '■ 録音停止';
+      document.getElementById('status').textContent = '8小節をWAVで録音中...';
+    });
+  } else {
+    isRecording = false;
+    btn.textContent = '● 録音して保存';
+
+    if (scriptNode) {
+      scriptNode.onaudioprocess = null;
+      masterOut.disconnect(scriptNode);
+      scriptNode.disconnect();
+      if (silentGain) silentGain.disconnect();
+    }
+
+    const wavBlob = encodeWAV(recordedSamples, audioCtx.sampleRate);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(wavBlob);
+    a.download = `8bar_otomehouse_${Date.now()}.wav`;
+    a.click();
+    document.getElementById('status').textContent = 'WAVファイルを書き出しました';
+  }
+}
+
+function encodeWAV(chunks, sampleRate) {
+  let totalLength = 0;
+  chunks.forEach(c => { totalLength += c.length; });
+  const merged = new Float32Array(totalLength);
+  let offset = 0;
+  chunks.forEach(c => { merged.set(c, offset); offset += c.length; });
+
+  const bytesPerSample = 2;
+  const buffer = new ArrayBuffer(44 + merged.length * bytesPerSample);
+  const view = new DataView(buffer);
+
+  function writeString(v, off, str) {
+    for (let i = 0; i < str.length; i++) v.setUint8(off + i, str.charCodeAt(i));
+  }
+
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + merged.length * bytesPerSample, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * bytesPerSample, true);
+  view.setUint16(32, bytesPerSample, true);
+  view.setUint16(34, 16, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, merged.length * bytesPerSample, true);
+
+  let idx = 44;
+  for (let i = 0; i < merged.length; i++) {
+    let s = Math.max(-1, Math.min(1, merged[i]));
+    s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    view.setInt16(idx, s, true);
+    idx += 2;
+  }
+
+  return new Blob([view], { type: 'audio/wav' });
+}
+
+// ==================== 初期化 ====================
+function init() {
+  randomizeChordProgression();
+  generateOtomeHouseGroove();
+  refreshAllUI();
+
+  document.getElementById('playBtn').onclick = togglePlay;
+  document.getElementById('recordBtn').onclick = toggleRecord;
+  document.getElementById('formatToggleBtn').onclick = () => {
+    if (isRecording) return;
+    recordFormat = recordFormat === 'wav' ? 'webm' : 'wav';
+    document.getElementById('formatToggleBtn').textContent = '形式: ' + (recordFormat === 'wav' ? 'WAV' : 'WebM');
+  };
+  document.getElementById('generateBtn').onclick = generateOtomeHouseGroove;
+  document.getElementById('chordRandomBtn').onclick = randomizeChordProgression;
+  document.getElementById('reverbBtn').onclick = () => {
+    reverbOn = !reverbOn;
+    const btn = document.getElementById('reverbBtn');
+    btn.classList.toggle('on', reverbOn);
+    if (reverbWet) reverbWet.gain.value = reverbOn ? 0.22 : 0;
+  };
+  document.getElementById('vinylBtn').onclick = () => {
+    vinylOn = !vinylOn;
+    const btn = document.getElementById('vinylBtn');
+    btn.classList.toggle('on', vinylOn);
+    if (vinylNoiseGain) vinylNoiseGain.gain.value = vinylOn ? 0.009 : 0.0;
+  };
+  document.getElementById('clearBtn').onclick = () => {
+    PATTERN_KEYS.forEach(k => Object.keys(patterns[k]).forEach(t => {
+      const nullable = (t === 'bass' || t === 'hihat');
+      patterns[k][t].fill(nullable ? null : false);
+    }));
+    arrangement = new Array(BAR_COUNT).fill('A');
+    refreshAllUI();
+  };
+  document.getElementById('bpmUp').onclick = () => { bpm = Math.min(136, bpm + 2); document.getElementById('bpmValue').textContent = bpm; updateSwingReadout(); };
+  document.getElementById('bpmDown').onclick = () => { bpm = Math.max(116, bpm - 2); document.getElementById('bpmValue').textContent = bpm; updateSwingReadout(); };
+  updateSwingReadout();
+
+  document.getElementById('status').textContent = '乙女ハウス風8小節を生成しました。パターンやアレンジを編集して自分好みにしてください！';
+}
+
+window.onload = init;
+</script>
+
+</body>
+</html>
